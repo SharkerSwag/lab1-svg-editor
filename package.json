@@ -11,6 +11,7 @@
     "cli": "tsx src/main.ts",
     "demo": "tsx src/main.ts < examples/creation.txt",
     "demo:svg": "node -e \"require('node:fs').mkdirSync('output',{recursive:true})\" && tsx src/main.ts < examples/export.txt",
+    "demo:full": "node -e \"require('node:fs').mkdirSync('output',{recursive:true})\" && tsx src/main.ts < examples/assignment-session.txt && tsx src/main.ts < examples/flowchart-full.txt",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test dist/tests/*.test.js"

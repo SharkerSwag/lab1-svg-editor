@@ -10,40 +10,23 @@
 
 | 模块 | 职责 | 当前进度 |
 | --- | --- | --- |
-| `src/cli/` | REPL、双引号参数解析、提示符和统一错误输出 | 已有骨架 |
-| `src/application/` | 命令注册与调度、当前文档及历史协调 | 已有 EditorSession；IO 协调待后续实现 |
+| `src/cli/` | REPL、双引号参数解析、提示符和统一错误输出 | 已实现 |
+| `src/application/` | 命令注册与调度、当前文档、历史与 IO 协调 | EditorApplication / CommandRegistry / EditorSession |
 | `src/commands/` | 对象化命令、可撤销编辑和历史管理 | 十九个 CLI 命令、全部编辑对象与 History 已实现 |
 | `src/model/` | 图形类层次、分组、画布、id 与树结构不变量 | 六种图形、工厂、文档、不可变几何与属性变换已实现 |
 | `src/io/` | SVG 解析、序列化及文件读写 | XML 解析、序列化、保存与读取均已实现 |
-| `src/main.ts` | 组合入口，构造对象并注入依赖 | 已有骨架 |
+| `src/main.ts` | 组合入口，构造对象并注入依赖 | 已实现 |
 | `tests/` | 自动测试，包括边界与脚本回放 | 当前覆盖输入、模型、创建、历史和示例回放 |
 
-组件图包含计划中的模块；以表中进度区分实际落地情况：
+实际组件图（PlantUML 生成）：
 
-```plantuml
-@startuml
-component "main\n组合入口" as Main
-component "cli\n输入输出" as CLI
-component "application\n调度与文档会话" as App
-component "commands\n命令与历史" as Commands
-component "model\n图形与文档" as Model
-component "io\nSVG 与文件" as IO
-Main --> CLI
-Main --> App
-Main --> Commands
-Main --> IO
-CLI --> App
-App --> Commands
-App --> IO
-App --> Model
-Commands --> Model
-IO --> Model
-@enduml
-```
+![架构组件图](https://raw.githubusercontent.com/SharkerSwag/lab1-svg-editor/main/doc/architecture.png)
+
+[PlantUML 源文件](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/architecture.puml) · [SVG 版本](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/architecture.svg)。图片和源码均随工程提交，上传本 README 后也可通过仓库访问。
 
 ### 设计模式的选择
 
-1. **Command（作业要求，已在创建链路落地）**：CLI 命令通过 `Command` 和 `CommandRegistry` 执行。`CreateCommand` 为每次输入创建独立的 `CreateShapeEdit`，后者实现 `UndoableEdit.execute/undo`。`History` 只在操作成功后移动栈项，新编辑成功后才清空 redo。`EditorSession` 在成功新建文档和修改尺寸后设置历史屏障。创建编辑保存独立图形副本与父 id；其他编辑命令后续补齐。
+1. **Command（作业要求）**：CLI 命令通过 `Command` 和 `CommandRegistry` 执行。每次编辑创建独立的 UndoableEdit 对象；创建使用 CreateShapeEdit，其余编辑继承 SnapshotEdit。History 只在操作成功后移动栈项，新编辑成功后才清空 redo。EditorSession 在成功 init/read/save 和修改尺寸后设置历史屏障。一次 group/delete 等多节点编辑始终是一个 undo 单元。
 2. **Composite**：抽象 `Shape` 与六种具体类统一几何描述、复制、移动、缩放和属性修改；`Group` 递归处理子节点并拒绝形成循环。修改方法返回新对象，原对象保持不变。g 的公共样式设置在容器自身，按 SVG 规则由缺省子节点继承，显式子样式保留。文档维护唯一 id 与树结构，CLI 不按图形类型分支修改几何字段。
 3. **集中式工厂**：只在 `ShapeFactory` 中按图形类型名字创建具体类。阶段一不搭建插件加载系统。
 
@@ -52,7 +35,7 @@ IO --> Model
 ### 依赖方向规则
 
 - `cli → application`：输入层提交参数，不直接操作图形或文件。
-- `application → commands/model/io`：调度命令并协调当前文档、历史与文件操作。
+- `application → commands/model`：调度命令并协调当前文档、历史与持久化端口，不导入 io 具体实现。
 - `commands → model`：编辑行为操作领域对象，不导入 CLI 或文件系统。
 - 应用层 `EditorSession` 实现命令层定义的 `CommandContext` 接口；命令通过该接口访问会话能力，不反向导入 application 实现，避免循环依赖。
 - `io → model`：在 SVG 和领域模型之间转换，不控制历史。
@@ -68,14 +51,14 @@ IO --> Model
 | 变化点 | 当前决策 |
 | --- | --- |
 | 新增 GUI 或 agent 输入通道 | CLI 与应用层分离，复用命令和图形模型 |
-| 新增图形类型及后续 `box` 插件 | 计划统一 Shape 接口和集中工厂；不提前实现动态插件加载 |
+| 新增图形类型及后续 `box` 插件 | 已有统一 Shape 接口和集中工厂；不提前实现动态插件加载 |
 | 新增编辑命令 | 用命令对象注册到单一分发入口，避免 REPL 膨胀 |
 | 读写格式、外部 SVG 兼容范围 | 独立 `io` 模块，先定义可支持范围，再做往返测试 |
 | 大文档导致撤销内存压力 | 先按操作保存必要恢复信息；没有性能证据前不加入磁盘历史 |
 
 修订：创建命令仍保存独立图形副本和父 id；后续基本编辑与结构编辑采用 `SnapshotEdit` 的前后文档快照（Memento）。操作先在独立候选文档上完成，再发布，便于完整保证跨子树操作失败不改变状态、撤销精确还原顺序。代价是每条编辑保存整份文档，适用于本 Lab 的小型示例；尚未针对大型图形做性能保证，不提前加入复杂增量恢复或磁盘历史。
 
-尚需确定并记录的规格边界：跨父容器分组的落点与相对顺序、外部 SVG 的 `transform` 支持范围、未知标签和其他属性的处理。实现前查补充说明；缺少明确规则时说明决定与理由，不能静默丢弃后宣称完整支持。
+对附件未完全指定的边界作出以下决定，避免让实现悄悄依赖未记录的假设：
 
 结构编辑决定：group 至少两个目标，拒绝重复目标和祖孙同时入选；按原文档前序而非参数顺序排列孩子。同父节点分组插在最早入选位置；跨父节点选择最低公共父容器，在最早相关直接分支前插入，不删除原来的空父容器。所有几何使用同一画布坐标，重组不改坐标。ungroup 严格遵守题目的根级禁止规则；front 为同级列表末尾（后绘制、上层），back 为列表开头。普通 g 的样式按 SVG 继承，改变父容器可能改变继承外观，操作不自动重写子样式。
 
@@ -137,19 +120,22 @@ SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本
 - XML 库默认使用较宽的换行归一化；为保证 XML 1.0 文本往返，显式使用 CR/CRLF 到 LF 的规则，测试覆盖 Unicode、CR 实体、TAB、U+0085 和 U+2028。
 - 62/62 测试通过；题目 other.svg、补 id 避碰撞、全部六种图形往返、失败 read 保留路径/历史、首次无需 init 即可 read 均已验证。
 
+### 2026-10-19：完整回放与一致性检查
+
+- 将第 6 节完整会话、第 6.1 节案例 A 保存为可回放脚本；测试在独立临时目录启动真实 CLI，检查只出现两条题目预期错误，并读回生成文件验证图形数、几何、文字与父节点。
+- 初次架构检查代码假定传统 TypeScript 编译器 API 可用，实际固定版本 7.0.2 的包入口只导出版本信息，导致编译失败。核对本地包的 exports 后改为明确有限的源码静态扫描，不新增一套编译器依赖，也不宣称是 AST 分析。
+- 修订早期 application 可依赖 IO 的方案：DocumentStorage 接口放在 model，application 和 io 均面向该端口，main 注入实现；实际应用层不导入文件实现。组件图、规则及架构测试已同步。
+- 67/67 测试通过，补齐 PlantUML 源码及实际生成的图像，清理文档中已过时的“待实现”声明。
+
 ## 一致性自查
 
-1. **模块划分**：cli/application/commands/model/io 均已创建，与方案方向一致；各模块未完成功能在表格中明确记录。
+1. **模块划分**：cli/application/commands/model/io 均已创建，与方案一致；新增的 ShapeInput 适配器、DocumentStorage 端口、SnapshotEdit 和 StructureEditor 分别落在既定职责内。快照策略与依赖收紧已在过程记录中修订。
 2. **依赖方向**：model 只依赖同模块；cli 依赖 application；application 依赖 commands/model；commands 仅依赖同模块和 model，不导入 application/cli 或文件系统；io 实现 model 的存储端口。main 为组合入口。
 
 ## 质量保证手段
 
-当前提供 `npm run typecheck` 与 `npm test`，后者先构建再用 Node 内置测试运行器执行测试。用例覆盖双引号及中文文字、空文字、路径、颜色、整行注释、未闭合引号、重名命令注册、错误后继续读取和提示符。
+当前 67 项自动测试覆盖输入解析、模型不变量、编辑及精确 undo/redo、失败原子性、历史屏障、补 id 与转义、SVG 往返、完整 CLI 示例以及架构规则。命令为 `npm run typecheck` 和 `npm test`，测试先构建再运行；`npm run demo:full` 可回放题目会话，`npm run demo:svg` 生成可直接浏览的文件。
 
-2026-10-19 首次骨架实测：`npm install` 成功，`npm test` 构建成功且 10/10 个测试通过；`'help' | npm run cli` 可启动、显示当前里程碑及命令规划，并在 EOF 退出。这里验证的是骨架，不代表图形编辑功能已验收。
+浏览器实际加载程序导出的 SVG，检查方框、中文、连线和节点位移，截图随文档提交。PlantUML 图也已渲染并检查。详细命令、环境和干净检出结果见 [verification.md](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/verification.md)，逐项状态见 [验收清单](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/%E9%AA%8C%E6%94%B6%E6%B8%85%E5%8D%95.md)。
 
-同日创建里程碑：`npm test` 构建成功且 30/30 通过。新增了领域模型、当前命令的失败原子性、创建撤销重做、尺寸屏障和真实 CLI 示例回放测试。各测试文件位于 `tests/`，回放输入位于 `examples/creation.txt`。
-
-后续需要：其余每条编辑的 execute/undo/redo 与失败原子性测试、文件 IO 屏障、SVG 缺失 id 和转义测试、保存读取往返、作业完整示例回放以及浏览器渲染检查。
-
-最终功能验收与证据位置见[验收清单](验收清单.md)。当前尚未完成这些检查，不作为最终质量声明。
+质量边界：只保证上文明确的 SVG 子集；全文档快照适用于 Lab 规模，未宣称大型场景性能或并发文件修改支持。自动检查结合人工自查提供信心，不等于证明没有缺陷。

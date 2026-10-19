@@ -1,0 +1,32 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Microsoft YaHei
+skinparam ArrowColor #526170
+skinparam componentBackgroundColor #EEF4FA
+skinparam componentBorderColor #526170
+
+component "main\n对象组合与依赖注入" as Main
+component "cli\nREPL / 参数解析 / 输出" as CLI
+component "application\n命令调度 / 文档会话" as App
+component "commands\nCommand / History / SnapshotEdit" as Commands
+component "model\nShape / Group / SvgDocument\nShapeFactory / DocumentStorage 接口" as Model
+component "io\nXML 解析 / SVG 序列化\nFileDocumentStorage 实现" as IO
+
+Main --> CLI
+Main --> App
+Main --> Commands
+Main --> IO
+CLI --> App
+App --> Commands
+App --> Model
+Commands --> Model
+IO --> Model
+
+note bottom of Model
+不依赖终端、文件系统或 XML 库
+commands 不导入 application 实现
+end note
+@enduml
