@@ -1,4 +1,4 @@
-/** CLI command contract; editable commands will additionally support undo. */
+/** Parsed CLI entry point. Each successful edit creates a separate UndoableEdit. */
 export interface Command {
   readonly name: string;
   readonly syntax: string;
