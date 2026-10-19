@@ -6,6 +6,7 @@ export interface CommandContext {
   readonly document: SvgDocument;
   initialize(document: SvgDocument): void;
   resizeCanvas(width: number, height: number): void;
+  save(file?: string): string;
   perform(edit: UndoableEdit): string;
   undo(): string;
   redo(): string;

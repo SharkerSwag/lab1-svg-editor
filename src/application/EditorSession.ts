@@ -1,11 +1,17 @@
 import type { CommandContext } from '../commands/CommandContext.js';
 import { History } from '../commands/History.js';
+import type { DocumentStorage } from '../model/DocumentStorage.js';
 import type { UndoableEdit } from '../commands/UndoableEdit.js';
 import type { SvgDocument } from '../model/SvgDocument.js';
 
 export class EditorSession implements CommandContext {
   private current: SvgDocument | undefined;
   private readonly history = new History();
+  private filePath: string | undefined;
+
+  constructor(private readonly storage?: DocumentStorage) {}
+
+  get associatedPath(): string | undefined { return this.filePath; }
 
   get document(): SvgDocument {
     if (this.current === undefined) {
@@ -16,12 +22,24 @@ export class EditorSession implements CommandContext {
 
   initialize(document: SvgDocument): void {
     this.current = document;
+    this.filePath = undefined;
     this.history.block();
   }
 
   resizeCanvas(width: number, height: number): void {
     this.document.resize(width, height);
     this.history.block();
+  }
+
+  save(file?: string): string {
+    const document = this.document;
+    const target = file ?? this.filePath;
+    if (target === undefined) { throw new Error("no file path. use 'save <file.svg>' first"); }
+    if (this.storage === undefined) { throw new Error('document storage is not configured'); }
+    this.storage.save(document, target);
+    this.filePath = target;
+    this.history.block();
+    return target;
   }
 
   perform(edit: UndoableEdit): string {

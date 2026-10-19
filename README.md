@@ -4,7 +4,7 @@
 
 仓库：https://github.com/SharkerSwag/lab1-svg-editor
 
-**当前状态：已实现画布、六种图形的创建与查看，以及创建命令的撤销重做。** 可用命令为 `help/init/canvas/create/tree/show/undo/redo`。移动、缩放、属性修改、结构编辑和 SVG 文件读写尚未实现；当前版本不是最终作业。
+**当前状态：已实现画布、六种图形创建与查看、创建的撤销重做，以及 SVG 保存。** 可用命令为 `help/init/canvas/create/tree/show/undo/redo/save`。移动、缩放、属性修改、结构编辑和 SVG 读取尚未实现；当前版本不是最终作业。
 
 ## 本地运行
 
@@ -40,7 +40,15 @@ tree
 npm run demo
 ```
 
-演示脚本位于 [examples/creation.txt](examples/creation.txt)，包含中文标签、嵌套分组和撤销重做。当前可查看结构树，还不能保存为 SVG 文件。
+演示脚本位于 [examples/creation.txt](examples/creation.txt)，包含中文标签、嵌套分组和撤销重做。
+
+导出真正的图片文件：
+
+```powershell
+npm run demo:svg
+```
+
+随后把工程目录的 `output/flowchart.svg` 拖进浏览器查看。此文件由本程序的 `save` 生成。也可以在 `svg>` 中执行 `save "我的图.svg"`；第一次指定路径后，后续 `save` 可省略路径。成功保存会设置历史屏障，失败则不改变历史和关联路径。`output/` 是生成目录，不提交 Git。
 
 ```powershell
 npm run typecheck

@@ -11,12 +11,15 @@ import { RedoCommand } from './commands/RedoCommand.js';
 import { ShowCommand } from './commands/ShowCommand.js';
 import { TreeCommand } from './commands/TreeCommand.js';
 import { UndoCommand } from './commands/UndoCommand.js';
+import { SaveCommand } from './commands/SaveCommand.js';
+import { FileDocumentStorage } from './io/FileDocumentStorage.js';
 
-const session = new EditorSession();
+const session = new EditorSession(new FileDocumentStorage());
 const registry = new CommandRegistry([
   new HelpCommand(),
   new InitCommand(session),
   new CanvasCommand(session),
+  new SaveCommand(session),
   new CreateCommand(session),
   new TreeCommand(session),
   new ShowCommand(session),

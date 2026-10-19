@@ -2,7 +2,7 @@
 
 仓库地址：https://github.com/SharkerSwag/lab1-svg-editor
 
-状态：2026-10-19 已完成图形创建与查询里程碑：画布、六种图形、嵌套创建、tree/show，以及创建的 undo/redo。其他编辑操作和 SVG 读写尚未完成。文中的“计划”不代表已经实现。
+状态：2026-10-19 已完成图形创建、查询和 SVG 保存：画布、六种图形、嵌套创建、tree/show、创建的 undo/redo 和 save。其他编辑操作和 SVG 读取尚未完成。
 
 ## 架构方案
 
@@ -14,7 +14,7 @@
 | `src/application/` | 命令注册与调度、当前文档及历史协调 | 已有 EditorSession；IO 协调待后续实现 |
 | `src/commands/` | 对象化命令、可撤销编辑和历史管理 | 八个 CLI 命令、创建编辑对象、History 已实现 |
 | `src/model/` | 图形类层次、分组、画布、id 与树结构不变量 | 六种图形、工厂与文档已实现；移动等操作待后续完成 |
-| `src/io/` | SVG 解析、序列化及文件读写 | 计划，尚未创建 |
+| `src/io/` | SVG 解析、序列化及文件读写 | 序列化与文件保存已实现，读取待补齐 |
 | `src/main.ts` | 组合入口，构造对象并注入依赖 | 已有骨架 |
 | `tests/` | 自动测试，包括边界与脚本回放 | 当前覆盖输入、模型、创建、历史和示例回放 |
 
@@ -56,6 +56,7 @@ IO --> Model
 - `commands → model`：编辑行为操作领域对象，不导入 CLI 或文件系统。
 - 应用层 `EditorSession` 实现命令层定义的 `CommandContext` 接口；命令通过该接口访问会话能力，不反向导入 application 实现，避免循环依赖。
 - `io → model`：在 SVG 和领域模型之间转换，不控制历史。
+- `model/DocumentStorage` 定义持久化端口，io 实现、application 注入使用，commands 不导入文件 IO 实现。
 - `model` 不依赖以上模块，不导入终端与文件 IO。
 - `main.ts` 是组合入口，允许导入各模块来注入对象，不承载图形业务逻辑。
 - 测试可以依赖被测模块，不被产品代码反向导入。
@@ -101,10 +102,18 @@ IO --> Model
 - 添加跨模块测试：失败后 redo 保留、canvas 查询不清历史、成功尺寸修改形成屏障、新编辑清 redo、连续五轮完整撤销与重做保持树顺序、题目流程图的嵌套创建步骤通过真实 CLI 回放。
 - 当前 30 项自动测试全部通过。示例只覆盖当前已完成的创建、查看和历史，不宣称完成题目含移动与保存的完整会话。
 
+### 2026-10-19：按需求补齐可见输出
+
+- 用户指出只有终端文字难以理解，因此在既定 CLI 范围内优先实现 save；使用浏览器原生 SVG 预览，不新增 GUI 或插件系统。
+- 通用序列化器消费 Shape 的几何、样式、文本与子节点，无需新增按 tag 分支。缺省 fill/stroke 保持省略，文字和属性分开转义，并拒绝 XML 不允许的字符。
+- 文件保存先在同目录写独占临时文件，再重命名替换；失败清理本次临时文件，保留已有文件。会话只在写入成功后更新关联路径并设置历史屏障。
+- 明确路径策略：save 不带参数使用最近成功 read/save 的关联路径，init 清除关联路径。这补齐了题目未明确的首次 save 后默认路径行为。
+- 36/36 自动测试通过，类型检查通过。运行 npm run demo:svg 后，由 Microsoft Edge 无头模式实际加载 output/flowchart.svg，检查到两块彩色矩形、中文文字和连线；该输出由程序生成。
+
 ## 一致性自查
 
-1. **模块划分**：当前已创建 cli/application/commands/model，与方案方向一致；io 尚未进入本里程碑，表格明确记录。
-2. **依赖方向**：model 只依赖同模块；cli 依赖 application；application 依赖 commands/model；commands 仅依赖同模块和 model，不导入 application/cli 或文件系统。main 为组合入口。最终需结合实际 import 再做完整审查。
+1. **模块划分**：cli/application/commands/model/io 均已创建，与方案方向一致；各模块未完成功能在表格中明确记录。
+2. **依赖方向**：model 只依赖同模块；cli 依赖 application；application 依赖 commands/model；commands 仅依赖同模块和 model，不导入 application/cli 或文件系统；io 实现 model 的存储端口。main 为组合入口。
 
 ## 质量保证手段
 
