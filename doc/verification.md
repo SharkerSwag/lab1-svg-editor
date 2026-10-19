@@ -7,7 +7,8 @@
 - Windows，Node.js v24.19.0、npm 11.17.0、Git 2.45.1。
 - TypeScript 7.0.2、tsx 4.23.15、@xmldom/xmldom 0.9.12；依赖版本与完整依赖树由 package-lock.json 固定。
 - `npm test`：先构建，再运行 Node 内置测试运行器，目前 **67/67 通过**。
-- 干净检出安装、类型检查和示例运行将在最后记录，不以已有 node_modules 的测试代替。
+- 干净目录验证通过：从提交 `90a86f8` 使用 git archive 解出源码到独立临时目录，无现成 node_modules/dist/output；依次执行 `npm ci`、`npm run typecheck`、`npm test`、`npm run demo:svg`、`npm run demo:full`，全部成功。
+- 干净目录中同样为 67/67 通过，完整会话只产生两条预期错误。之后仅更新交付与验证文档，运行代码和测试未改动。
 
 ## 证据与覆盖范围
 
