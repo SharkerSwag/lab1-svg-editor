@@ -146,6 +146,13 @@ SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本
 - 将交付状态改为二次复核与试用，不移动、删除或强制覆盖旧 final。修复按正常提交进入 main；正式标签需在实际试用和最终确认后再处理。详见 [二次审查记录](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/review-2026-10-19.md)。
 - 修复提交 023ba74 在另一个独立干净目录完成 npm ci、类型检查、74 项测试和两个完整演示；生成 SVG 与浏览器检查源文件哈希一致。该结果作为继续试用的依据，不再直接等同于正式定版。
 
+### 2026-10-19：混合操作验收与编码边界修复
+
+- 用户要求继续测试和优化，因此增加四个固定种子、每个 300 步的混合命令序列。用独立的序列化状态栈检查 undo/redo，逐步检查唯一 id、父节点、同级位置、索引数量和 SVG 往返；不是只检查程序不崩溃。合计覆盖 302 次成功编辑、444 次被拒绝的操作、42 次成功撤销/重做，其他步骤包括查询、IO 与预期失败的历史操作。
+- 发现 UTF-8 解码器与 XML 声明之间的检查缺口：原代码会接受声明 ISO-8859-1/UTF-16 的输入，可能与浏览器解码不一致。先新增两个真实失败测试，再在已解析的 XML 声明上检查编码；UTF-8 大小写形式正常通过，CDATA 中的字面声明不被误拒绝。非 UTF-8 仍是明确不支持的边界，不扩展到通用编码转换。[依据：XML 1.0 第 4.3.3 节](https://www.w3.org/TR/REC-xml/#charencoding)。
+- 新增中文动手验收流程，覆盖十九条命令、分组与解组、画布、错误后继续处理及可见图片。真实 CLI 进程自动回放指南并检查三个预期错误、最终七个元素、几何和父子关系，避免使用说明与程序行为脱节。
+- 当前共 81 项测试通过；Edge 实际加载指南生成的 SVG，蓝色矩形、橙色圆、绿色椭圆、中文与横线显示正常，截图和原 SVG 已留存。继续保留旧 final，不因本轮通过自动改写标签。
+
 ## 一致性自查
 
 1. **模块划分**：cli/application/commands/model/io 均已创建，与方案一致；新增的 ShapeInput 适配器、DocumentStorage 端口、SnapshotEdit 和 StructureEditor 分别落在既定职责内。快照策略与依赖收紧已在过程记录中修订。
@@ -153,7 +160,7 @@ SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本
 
 ## 质量保证手段
 
-当前 74 项自动测试覆盖输入解析、模型不变量、编辑及精确 undo/redo、失败原子性、历史屏障、补 id 与转义、SVG 往返、完整 CLI 示例、架构规则，以及二次复核发现的保存路径、UNC 和非法 XML 引用问题。测试数本身不代表代码已无缺陷。命令为 `npm run typecheck` 和 `npm test`，测试先构建再运行；`npm run demo:full` 可回放题目会话，`npm run demo:svg` 生成可直接浏览的文件。
+当前 81 项自动测试覆盖输入解析、模型不变量、编辑及精确 undo/redo、失败原子性、历史屏障、补 id 与转义、SVG 往返、完整 CLI 示例、架构规则、保存路径、UNC、非法 XML 引用与编码声明，以及 1,200 步混合操作和中文使用指南回放。测试数本身不代表代码已无缺陷。命令为 `npm run typecheck` 和 `npm test`，测试先构建再运行；`npm run demo:full` 可回放题目会话，`npm run demo:svg` 生成可直接浏览的文件。本人可按 [动手验收](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/%E5%8A%A8%E6%89%8B%E9%AA%8C%E6%94%B6.md) 操作并理解架构。
 
 浏览器实际加载程序导出的 SVG，检查方框、中文、连线和节点位移，截图随文档提交。PlantUML 图也已渲染并检查。详细命令、环境和干净检出结果见 [verification.md](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/verification.md)，逐项状态见 [验收清单](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/%E9%AA%8C%E6%94%B6%E6%B8%85%E5%8D%95.md)。
 

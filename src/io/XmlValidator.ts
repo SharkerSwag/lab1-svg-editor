@@ -25,6 +25,14 @@ export class XmlValidator {
 
   tree(node: Node): void {
     if (node.nodeValue !== null) { this.characters.validate(node.nodeValue); }
+    // The file adapter decodes UTF-8 bytes. Never silently ignore a conflicting declaration.
+    // Inspect the parsed instruction so a declaration inside CDATA remains literal text.
+    if (node.nodeType === 7 && node.nodeName === 'xml') {
+      const encoding = /(?:^|[ \t\r\n])encoding[ \t\r\n]*=[ \t\r\n]*(["'])([^"']*)\1/u.exec(node.nodeValue ?? '')?.[2];
+      if (encoding !== undefined && encoding.toUpperCase() !== 'UTF-8') {
+        throw new Error(`unsupported XML encoding: ${encoding}; expected UTF-8`);
+      }
+    }
     if (node.nodeType === 1) {
       for (const attribute of Array.from((node as Element).attributes)) {
         this.characters.validate(attribute.value);

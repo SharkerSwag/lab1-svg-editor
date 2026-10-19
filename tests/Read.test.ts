@@ -230,3 +230,33 @@ test('a rejected character-reference import preserves the previous document and 
   session.redo();
   assert.equal(session.document.has('keep'), true);
 });
+
+test('reader enforces its UTF-8 declaration contract without inspecting literal XML-looking text', () => {
+  const reader = new SvgReader();
+  for (const encoding of ['ISO-8859-1', 'UTF-16', 'windows-1252']) {
+    assert.throws(() => reader.read(`<?xml version="1.0" encoding="${encoding}"?><svg/>`), /UTF-8/u);
+  }
+  for (const encoding of ['UTF-8', 'utf-8']) {
+    assert.equal(reader.read(`<?xml version='1.0' encoding = '${encoding}'?><svg><text id="t">中文</text></svg>`)
+      .document.shape('t').text, '中文');
+  }
+  const literal = reader.read('<svg><text id="t"><![CDATA[<?xml version="1.0" encoding="UTF-16"?>]]></text></svg>');
+  assert.equal(literal.document.shape('t').text, '<?xml version="1.0" encoding="UTF-16"?>');
+});
+
+test('an unsupported encoding declaration preserves document, path and pending redo', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'svg-read-declaration-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const file = join(directory, 'legacy.svg');
+  writeFileSync(file, '<?xml version="1.0" encoding="ISO-8859-1"?><svg><text id="t">中文</text></svg>', 'utf8');
+  const session = new EditorSession(new FileDocumentStorage());
+  new InitCommand(session).execute([]);
+  new CreateCommand(session).execute(['g', 'keep']);
+  session.undo();
+  const before = new SvgSerializer().serialize(session.document);
+  assert.throws(() => session.read(file), /cannot read file: .*UTF-8/u);
+  assert.equal(new SvgSerializer().serialize(session.document), before);
+  assert.equal(session.associatedPath, undefined);
+  session.redo();
+  assert.equal(session.document.has('keep'), true);
+});

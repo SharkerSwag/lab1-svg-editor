@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <g id="scene">
+    <circle id="c" cx="170" cy="70" r="20" fill="#f5a623"/>
+    <rect id="r" x="30" y="50" width="80" height="40" fill="#4a90d9"/>
+    <line id="l" x1="40" y1="230" x2="560" y2="230" stroke="black"/>
+    <text id="title" x="40" y="40">分组、撤销与读写验收</text>
+    <g id="details">
+      <ellipse id="e" cx="500" cy="120" rx="65" ry="40" fill="#36a675"/>
+    </g>
+  </g>
+</svg>
