@@ -16,6 +16,8 @@
 
 第三轮新增编码声明校验、两个回归测试、四个混合操作测试和一个中文指南验收测试。编码声明测试在修复前均失败、修复后通过。当前类型检查、81 项测试和差异空白检查通过；旧 final 不移动。
 
+第三轮源码提交 `64a0513e40087cc66a08eba56a0de51016f16ce5` 已用 git archive 导出到新的独立目录，再依次执行 npm ci、npm run typecheck、npm test、npm run demo:svg、npm run demo:full，全部退出码为 0，**81/81 通过**。完整会话仍仅出现两条题目预期错误；新导出的 flowchart.svg 与已检查的 browser-preview.svg SHA-256 一致。本机临时目录名为 lab1-acceptance-check-da2f905bc6a34987a98e331bf3c95206，各命令日志已保留。此后只补验证文档，运行代码与测试未改动。
+
 ## 证据与覆盖范围
 
 | 测试文件 | 覆盖内容 |
