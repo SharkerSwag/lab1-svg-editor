@@ -17,6 +17,11 @@ import { MoveCommand } from './commands/MoveCommand.js';
 import { ScaleCommand } from './commands/ScaleCommand.js';
 import { SetCommand } from './commands/SetCommand.js';
 import { DeleteCommand } from './commands/DeleteCommand.js';
+import { GroupCommand } from './commands/GroupCommand.js';
+import { UngroupCommand } from './commands/UngroupCommand.js';
+import { AddToCommand } from './commands/AddToCommand.js';
+import { FrontCommand } from './commands/FrontCommand.js';
+import { BackCommand } from './commands/BackCommand.js';
 
 const session = new EditorSession(new FileDocumentStorage());
 const registry = new CommandRegistry([
@@ -29,6 +34,11 @@ const registry = new CommandRegistry([
   new ScaleCommand(session),
   new SetCommand(session),
   new DeleteCommand(session),
+  new GroupCommand(session),
+  new UngroupCommand(session),
+  new AddToCommand(session),
+  new FrontCommand(session),
+  new BackCommand(session),
   new TreeCommand(session),
   new ShowCommand(session),
   new UndoCommand(session),

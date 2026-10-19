@@ -30,13 +30,13 @@ export class HelpCommand implements Command {
       '  move <id> <dx> <dy>',
       '  scale <id> <factor>',
       '  set <id> <attr> <value>',
-      'Planned commands (not implemented yet):',
-      '  read <file.svg>',
       '  group <newGid> <id1> <id2>...',
       '  ungroup <gid>',
       '  addto <gid> <id>',
       '  front <id>',
       '  back <id>',
+      'Planned commands (not implemented yet):',
+      '  read <file.svg>',
       'Send EOF to exit (Ctrl+Z then Enter on Windows).',
     ].join('\n');
   }
