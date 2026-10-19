@@ -10,7 +10,9 @@
 - 干净目录验证通过：从提交 `90a86f8` 使用 git archive 解出源码到独立临时目录，无现成 node_modules/dist/output；依次执行 `npm ci`、`npm run typecheck`、`npm test`、`npm run demo:svg`、`npm run demo:full`，全部成功。
 - 干净目录中同样为 67/67 通过，完整会话只产生两条预期错误。之后仅更新交付与验证文档，运行代码和测试未改动。
 
-上述 67 项干净目录结果只适用于旧轮次。二次独立复核另发现并修复保存路径、UNC 与非法 XML 引用问题；新增 7 项回归用例。目前开发目录 74/74、类型检查通过，本轮干净目录验证将单独记录。
+上述 67 项干净目录结果只适用于旧轮次。二次独立复核另发现并修复保存路径、UNC 与非法 XML 引用问题；新增 7 项回归用例。
+
+本轮从修复提交 `023ba74` 使用 git archive 解出另一独立临时目录，重新执行 npm ci、类型检查、npm test、demo:svg 与 demo:full，**74/74 通过**，完整会话仍只有两条题目预期错误。新导出的 output/flowchart.svg 与已由浏览器检查的 doc/browser-preview.svg SHA-256 一致，预览证据仍适用。此后仅记录结果，运行代码不变；旧 final 标签不移动，当前 main 进入试用复核阶段。
 
 ## 证据与覆盖范围
 
