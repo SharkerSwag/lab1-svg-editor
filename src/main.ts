@@ -13,6 +13,10 @@ import { TreeCommand } from './commands/TreeCommand.js';
 import { UndoCommand } from './commands/UndoCommand.js';
 import { SaveCommand } from './commands/SaveCommand.js';
 import { FileDocumentStorage } from './io/FileDocumentStorage.js';
+import { MoveCommand } from './commands/MoveCommand.js';
+import { ScaleCommand } from './commands/ScaleCommand.js';
+import { SetCommand } from './commands/SetCommand.js';
+import { DeleteCommand } from './commands/DeleteCommand.js';
 
 const session = new EditorSession(new FileDocumentStorage());
 const registry = new CommandRegistry([
@@ -21,6 +25,10 @@ const registry = new CommandRegistry([
   new CanvasCommand(session),
   new SaveCommand(session),
   new CreateCommand(session),
+  new MoveCommand(session),
+  new ScaleCommand(session),
+  new SetCommand(session),
+  new DeleteCommand(session),
   new TreeCommand(session),
   new ShowCommand(session),
   new UndoCommand(session),

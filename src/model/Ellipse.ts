@@ -26,6 +26,18 @@ export class Ellipse extends Shape {
   get geometrySummary(): string { return `cx=${this.cx} cy=${this.cy} rx=${this.rx} ry=${this.ry}`; }
 
   clone(): Ellipse {
-    return new Ellipse(this.id, this.cx, this.cy, this.rx, this.ry, this.styles.get('fill'));
+    return this.copyStyles(new Ellipse(this.id, this.cx, this.cy, this.rx, this.ry));
+  }
+
+  protected override rebuild(geometry: ReadonlyMap<string, number>): Ellipse {
+    return new Ellipse(this.id, geometry.get('cx')!, geometry.get('cy')!, geometry.get('rx')!, geometry.get('ry')!);
+  }
+
+  protected moveGeometry(dx: number, dy: number): Ellipse {
+    return new Ellipse(this.id, this.cx + dx, this.cy + dy, this.rx, this.ry);
+  }
+
+  protected scaleGeometry(factor: number): Ellipse {
+    return new Ellipse(this.id, this.cx * factor, this.cy * factor, this.rx * factor, this.ry * factor);
   }
 }

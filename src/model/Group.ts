@@ -33,6 +33,18 @@ export class Group extends Shape {
   clone(): Group {
     const group = new Group(this.id);
     for (const child of this.items) { group.insert(child.clone()); }
+    return this.copyStyles(group);
+  }
+
+  protected moveGeometry(dx: number, dy: number): Group {
+    const group = new Group(this.id);
+    for (const child of this.items) { group.insert(child.moved(dx, dy)); }
+    return group;
+  }
+
+  protected scaleGeometry(factor: number): Group {
+    const group = new Group(this.id);
+    for (const child of this.items) { group.insert(child.scaled(factor)); }
     return group;
   }
 }

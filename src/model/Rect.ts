@@ -28,6 +28,18 @@ export class Rect extends Shape {
   }
 
   clone(): Rect {
-    return new Rect(this.id, this.x, this.y, this.width, this.height, this.styles.get('fill'));
+    return this.copyStyles(new Rect(this.id, this.x, this.y, this.width, this.height));
+  }
+
+  protected override rebuild(geometry: ReadonlyMap<string, number>): Rect {
+    return new Rect(this.id, geometry.get('x')!, geometry.get('y')!, geometry.get('width')!, geometry.get('height')!);
+  }
+
+  protected moveGeometry(dx: number, dy: number): Rect {
+    return new Rect(this.id, this.x + dx, this.y + dy, this.width, this.height);
+  }
+
+  protected scaleGeometry(factor: number): Rect {
+    return new Rect(this.id, this.x * factor, this.y * factor, this.width * factor, this.height * factor);
   }
 }

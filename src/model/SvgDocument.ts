@@ -19,6 +19,7 @@ export class SvgDocument {
   get height(): number { return this.heightValue; }
   get children(): readonly Shape[] { return this.roots.map((shape) => shape.clone()); }
   get size(): number { return this.index.size; }
+  has(id: string): boolean { return this.index.has(id); }
 
   resize(width: number, height: number): void {
     Numbers.positive(width, 'canvas width');
@@ -34,7 +35,7 @@ export class SvgDocument {
     return this.parents.get(id)?.id;
   }
 
-  add(shape: Shape, parentId?: string): void {
+  add(shape: Shape, parentId?: string, position?: number): void {
     const owned = shape.clone();
     const additions = [...this.walk(owned)];
     const ids = new Set<string>();
@@ -53,8 +54,11 @@ export class SvgDocument {
     }
 
     // All expected validation errors occur before changing the owned tree/index.
-    if (parent === undefined) { this.roots.push(owned); }
-    else { parent.insert(owned); }
+    const insertion = position ?? (parent === undefined ? this.roots.length : parent.children.length);
+    const length = parent === undefined ? this.roots.length : parent.children.length;
+    if (!Number.isInteger(insertion) || insertion < 0 || insertion > length) { throw new Error('invalid child position'); }
+    if (parent === undefined) { this.roots.splice(insertion, 0, owned); }
+    else { parent.insert(owned, insertion); }
     this.register(owned, parent);
   }
 
@@ -68,6 +72,39 @@ export class SvgDocument {
       this.index.delete(node.id);
       this.parents.delete(node.id);
     }
+  }
+
+  positionOf(id: string): number {
+    const shape = this.lookup(id);
+    const parent = this.parents.get(id);
+    return (parent === undefined ? this.roots : parent.children).indexOf(shape);
+  }
+
+  replace(id: string, replacement: Shape): void {
+    if (replacement.id !== id) { throw new Error('replacement must retain its id'); }
+    const candidate = this.clone();
+    const parent = candidate.parentOf(id);
+    const position = candidate.positionOf(id);
+    candidate.remove(id);
+    candidate.add(replacement, parent, position);
+    this.restore(candidate);
+  }
+
+  clone(): SvgDocument {
+    const document = new SvgDocument(this.width, this.height);
+    for (const shape of this.roots) { document.add(shape); }
+    return document;
+  }
+
+  restore(snapshot: SvgDocument): void {
+    const source = snapshot.clone();
+    this.widthValue = source.width;
+    this.heightValue = source.height;
+    this.roots.splice(0, this.roots.length, ...source.roots);
+    this.index.clear();
+    this.parents.clear();
+    for (const [id, shape] of source.index) { this.index.set(id, shape); }
+    for (const [id, parent] of source.parents) { this.parents.set(id, parent); }
   }
 
   private lookup(id: string): Shape {

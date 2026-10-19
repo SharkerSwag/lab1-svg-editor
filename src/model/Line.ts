@@ -26,6 +26,18 @@ export class Line extends Shape {
   get geometrySummary(): string { return `(${this.x1},${this.y1}) -> (${this.x2},${this.y2})`; }
 
   clone(): Line {
-    return new Line(this.id, this.x1, this.y1, this.x2, this.y2, this.styles.get('stroke'));
+    return this.copyStyles(new Line(this.id, this.x1, this.y1, this.x2, this.y2));
+  }
+
+  protected override rebuild(geometry: ReadonlyMap<string, number>): Line {
+    return new Line(this.id, geometry.get('x1')!, geometry.get('y1')!, geometry.get('x2')!, geometry.get('y2')!);
+  }
+
+  protected moveGeometry(dx: number, dy: number): Line {
+    return new Line(this.id, this.x1 + dx, this.y1 + dy, this.x2 + dx, this.y2 + dy);
+  }
+
+  protected scaleGeometry(factor: number): Line {
+    return new Line(this.id, this.x1 * factor, this.y1 * factor, this.x2 * factor, this.y2 * factor);
   }
 }

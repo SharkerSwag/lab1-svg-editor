@@ -4,7 +4,7 @@
 
 仓库：https://github.com/SharkerSwag/lab1-svg-editor
 
-**当前状态：已实现画布、六种图形创建与查看、创建的撤销重做，以及 SVG 保存。** 可用命令为 `help/init/canvas/create/tree/show/undo/redo/save`。移动、缩放、属性修改、结构编辑和 SVG 读取尚未实现；当前版本不是最终作业。
+**当前状态：已实现画布、六种图形、基本编辑与撤销重做，以及 SVG 保存。** 可用命令包括 `help/init/canvas/create/move/scale/set/delete/tree/show/undo/redo/save`。结构编辑和 SVG 读取尚未实现；当前版本不是最终作业。
 
 ## 本地运行
 
