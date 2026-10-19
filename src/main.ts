@@ -22,6 +22,7 @@ import { UngroupCommand } from './commands/UngroupCommand.js';
 import { AddToCommand } from './commands/AddToCommand.js';
 import { FrontCommand } from './commands/FrontCommand.js';
 import { BackCommand } from './commands/BackCommand.js';
+import { ReadCommand } from './commands/ReadCommand.js';
 
 const session = new EditorSession(new FileDocumentStorage());
 const registry = new CommandRegistry([
@@ -29,6 +30,7 @@ const registry = new CommandRegistry([
   new InitCommand(session),
   new CanvasCommand(session),
   new SaveCommand(session),
+  new ReadCommand(session),
   new CreateCommand(session),
   new MoveCommand(session),
   new ScaleCommand(session),

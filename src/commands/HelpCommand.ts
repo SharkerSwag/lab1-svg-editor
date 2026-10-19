@@ -9,7 +9,7 @@ export class HelpCommand implements Command {
       throw new Error('usage: help');
     }
     return [
-      'SVG editor — creation and document milestone',
+      'SVG editor — Lab1 Phase 1',
       'Available now:',
       '  help',
       '  init [w] [h]',
@@ -35,7 +35,6 @@ export class HelpCommand implements Command {
       '  addto <gid> <id>',
       '  front <id>',
       '  back <id>',
-      'Planned commands (not implemented yet):',
       '  read <file.svg>',
       'Send EOF to exit (Ctrl+Z then Enter on Windows).',
     ].join('\n');

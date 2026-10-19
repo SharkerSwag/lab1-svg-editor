@@ -4,6 +4,10 @@ import { Numbers } from './Numbers.js';
 export abstract class Shape {
   abstract readonly tag: string;
   private readonly styleValues = new Map<string, string>();
+  private readonly presentationValues = new Map<string, string>();
+  static readonly presentationNames: ReadonlySet<string> = new Set([
+    'font-size', 'font-family', 'font-weight', 'font-style', 'text-anchor', 'xml:space',
+  ]);
 
   protected constructor(
     private readonly identifier: string,
@@ -27,6 +31,15 @@ export abstract class Shape {
 
   get styles(): ReadonlyMap<string, string> {
     return new Map(this.styleValues);
+  }
+
+  get presentation(): ReadonlyMap<string, string> { return new Map(this.presentationValues); }
+
+  withPresentation(name: string, value: string): Shape {
+    if (!Shape.presentationNames.has(name)) { throw new Error(`unsupported presentation attribute: ${name}`); }
+    const result = this.clone();
+    result.presentationValues.set(name, value);
+    return result;
   }
 
   get summary(): string {
@@ -68,6 +81,7 @@ export abstract class Shape {
 
   protected copyStyles<T extends Shape>(shape: T): T {
     for (const [name, value] of this.styleValues) { shape.styleValues.set(name, value); }
+    for (const [name, value] of this.presentationValues) { shape.presentationValues.set(name, value); }
     return shape;
   }
 

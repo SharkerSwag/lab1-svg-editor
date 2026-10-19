@@ -42,6 +42,15 @@ export class EditorSession implements CommandContext {
     return target;
   }
 
+  read(file: string): readonly string[] {
+    if (this.storage === undefined) { throw new Error('document storage is not configured'); }
+    const loaded = this.storage.read(file);
+    this.current = loaded.document;
+    this.filePath = file;
+    this.history.block();
+    return loaded.warnings;
+  }
+
   perform(edit: UndoableEdit): string {
     this.document;
     return this.history.perform(edit);

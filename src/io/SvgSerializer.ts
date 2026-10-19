@@ -20,6 +20,7 @@ export class SvgSerializer {
       `id="${this.escape.attribute(shape.id)}"`,
       ...Array.from(shape.geometry, ([name, value]) => `${name}="${value}"`),
       ...Array.from(shape.styles, ([name, value]) => `${name}="${this.escape.attribute(value)}"`),
+      ...Array.from(shape.presentation, ([name, value]) => `${name}="${this.escape.attribute(value)}"`),
     ].join(' ');
     const children = shape.children;
     if (shape.text !== undefined) {

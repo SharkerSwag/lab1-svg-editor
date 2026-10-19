@@ -21,6 +21,7 @@ export class ShowCommand implements Command {
     if (shape.styles.size > 0) {
       lines.push(`  ${Array.from(shape.styles, ([key, value]) => `${key}=${value}`).join(' ')}`);
     }
+    for (const [name, value] of shape.presentation) { lines.push(`  ${name}=${JSON.stringify(value)}`); }
     return lines.join('\n');
   }
 }
