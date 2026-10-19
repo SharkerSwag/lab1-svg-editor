@@ -2,7 +2,7 @@
 
 仓库地址：https://github.com/SharkerSwag/lab1-svg-editor
 
-状态：2026-10-19 Phase 1 十九条 CLI 命令与完整验收已完成，交付版本以仓库 final 标签为准。后续 box 插件不在当前实现范围。课程平台上的 README 上传及状态核对需由本人执行。
+状态：2026-10-19 Phase 1 功能已实现，正在二次复核与试用。本轮 main 修复了独立复核发现的问题，已有 final 暂保留为旧版对照，尚未重新确认正式交付。后续 box 插件不在当前范围。课程平台上的 README 上传及状态核对需由本人执行。
 
 ## 架构方案
 
@@ -64,6 +64,8 @@
 
 SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本图形、嵌套、公共样式、数字/px 长度、文字与 CDATA。title/desc/metadata 不作为图形；保留 font-size/font-family/font-weight/font-style/text-anchor/xml:space 作为导入显示属性，不扩展 set 白名单。根尺寸缺失时优先采用 viewBox，否则默认 800×600；存在 viewBox 时要求为 0 0 width height。支持嵌套 translate 并展平至几何坐标；其他 transform、CSS style/class、未支持元素/属性、非 UTF-8 和 DTD 明确拒绝，不静默丢弃。未知 data-kind 警告后降级普通类型，不恢复 box 便利属性。显式 id 先全量预留再补缺失 id，避免与后面元素碰撞。
 
+默认保存路径：read 绑定读入路径，后续显式 save 到其他文件不改变该路径，确保无参数 save 按题目写回读入文件。init 后首次成功 save 建立默认路径；init 清除绑定，后续 read 重新绑定。带引号参数中的反斜杠保持字面值，只将 `\"` 用作文字内双引号转义，因此 Windows UNC 前缀不会被折叠。
+
 ## 过程记录
 
 ### 2026-10-19：澄清提交与首个里程碑
@@ -96,7 +98,7 @@ SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本
 - 用户指出只有终端文字难以理解，因此在既定 CLI 范围内优先实现 save；使用浏览器原生 SVG 预览，不新增 GUI 或插件系统。
 - 通用序列化器消费 Shape 的几何、样式、文本与子节点，无需新增按 tag 分支。缺省 fill/stroke 保持省略，文字和属性分开转义，并拒绝 XML 不允许的字符。
 - 文件保存先在同目录写独占临时文件，再重命名替换；失败清理本次临时文件，保留已有文件。会话只在写入成功后更新关联路径并设置历史屏障。
-- 明确路径策略：save 不带参数使用最近成功 read/save 的关联路径，init 清除关联路径。这补齐了题目未明确的首次 save 后默认路径行为。
+- 最初将默认保存路径设为最近成功 read/save 的路径。后续二次复核发现这会覆盖题目明确要求的“读入时路径”，该策略已修正，见下文复核记录；init 后首次保存的缺省行为仍单独记录。
 - 36/36 自动测试通过，类型检查通过。运行 npm run demo:svg 后，由 Microsoft Edge 无头模式实际加载 output/flowchart.svg，检查到两块彩色矩形、中文文字和连线；该输出由程序生成。
 
 ### 2026-10-19：基本编辑与失败原子性
@@ -133,6 +135,16 @@ SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本
 - 完整会话只出现题目预期的祖孙冲突和 IO 后 undo 两条错误；生成文件与中文、节点位移和连线的浏览器截图一致。
 - 此后仅补充验证结果与交付说明，不再修改已验证的运行代码。代码、文档与 final 标签一起推送；README 需本人在课程平台上传，不能把远程 Git 推送当作课程平台提交。
 
+以上是当时一次过早的定版记录，不是当前交付结论。用户指出收尾过快后，继续进行下面的独立复核；已有 final 不覆盖本轮新增修复。
+
+### 2026-10-19：撤回过早定版判断，独立复核后继续修复
+
+- 以最初骨架至旧 final 的全部实现为审查范围，分别进行 Standards 与 Spec 独立审查。架构轴未发现需要整改的硬性违规；需求轴最初也遗漏保存路径分支，手工复现后再次审查，确认该分支与题目原文不符。
+- 具体问题：read A → save B → 再编辑 → save 会写 B；Windows UNC 前缀会由两个反斜杠变为一个；XML 库接受非法数字字符引用，使读入后的文档不能正常保存。
+- 先新增 6 个测试，修复前其中 5 个失败、1 个用于确保 CDATA/注释/PI 中的字面引用不被误拒绝。修复后 73 项测试通过；再次独立审查补充发现带正负号的畸形引用仍会被底层库忽略，再增一项回归，修复后 74 项通过。
+- 通过保留已绑定保存路径、修正引号解析中的反斜杠规则，以及输入端 XML 引用检查和解析后字符检查修复问题；未为润色而重构合理的 Command/Composite 或引入新功能。
+- 将交付状态改为二次复核与试用，不移动、删除或强制覆盖旧 final。修复按正常提交进入 main；正式标签需在实际试用和最终确认后再处理。详见 [二次审查记录](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/review-2026-10-19.md)。
+
 ## 一致性自查
 
 1. **模块划分**：cli/application/commands/model/io 均已创建，与方案一致；新增的 ShapeInput 适配器、DocumentStorage 端口、SnapshotEdit 和 StructureEditor 分别落在既定职责内。快照策略与依赖收紧已在过程记录中修订。
@@ -140,7 +152,7 @@ SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本
 
 ## 质量保证手段
 
-当前 67 项自动测试覆盖输入解析、模型不变量、编辑及精确 undo/redo、失败原子性、历史屏障、补 id 与转义、SVG 往返、完整 CLI 示例以及架构规则。命令为 `npm run typecheck` 和 `npm test`，测试先构建再运行；`npm run demo:full` 可回放题目会话，`npm run demo:svg` 生成可直接浏览的文件。
+当前 74 项自动测试覆盖输入解析、模型不变量、编辑及精确 undo/redo、失败原子性、历史屏障、补 id 与转义、SVG 往返、完整 CLI 示例、架构规则，以及二次复核发现的保存路径、UNC 和非法 XML 引用问题。测试数本身不代表代码已无缺陷。命令为 `npm run typecheck` 和 `npm test`，测试先构建再运行；`npm run demo:full` 可回放题目会话，`npm run demo:svg` 生成可直接浏览的文件。
 
 浏览器实际加载程序导出的 SVG，检查方框、中文、连线和节点位移，截图随文档提交。PlantUML 图也已渲染并检查。详细命令、环境和干净检出结果见 [verification.md](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/verification.md)，逐项状态见 [验收清单](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/%E9%AA%8C%E6%94%B6%E6%B8%85%E5%8D%95.md)。
 

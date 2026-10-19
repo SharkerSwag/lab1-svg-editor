@@ -116,3 +116,39 @@ test('actual CLI saves UTF-8 SVG to a quoted path and reports the IO barrier', (
   assert.match(output, /error: undo not allowed after io command/u);
   assert.match(readFileSync(file, 'utf8'), /开始 &amp; &lt;完成&gt;<\/text>/u);
 });
+
+test('an explicit export does not redirect later parameterless saves away from the read path', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'svg-save-read-path-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const original = join(directory, 'original.svg');
+  const exported = join(directory, 'exported.svg');
+  writeFileSync(original, '<svg><g id="original"/></svg>');
+  const session = new EditorSession(new FileDocumentStorage());
+  session.read(original);
+  const create = new CreateCommand(session);
+  const save = new SaveCommand(session);
+  create.execute(['g', 'first']);
+  save.execute([exported]);
+  assert.equal(session.associatedPath, original);
+  create.execute(['g', 'second']);
+  assert.equal(save.execute([]), `saved to ${original} (3 elements)`);
+  assert.match(readFileSync(original, 'utf8'), /id="second"/u);
+  assert.doesNotMatch(readFileSync(exported, 'utf8'), /id="second"/u);
+});
+
+test('an init-created document binds only its first successful save as the default path', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'svg-save-first-path-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const first = join(directory, 'first.svg');
+  const exported = join(directory, 'exported.svg');
+  const session = new EditorSession(new FileDocumentStorage());
+  new InitCommand(session).execute([]);
+  const save = new SaveCommand(session);
+  save.execute([first]);
+  save.execute([exported]);
+  assert.equal(session.associatedPath, first);
+  new CreateCommand(session).execute(['g', 'latest']);
+  save.execute([]);
+  assert.match(readFileSync(first, 'utf8'), /id="latest"/u);
+  assert.doesNotMatch(readFileSync(exported, 'utf8'), /id="latest"/u);
+});

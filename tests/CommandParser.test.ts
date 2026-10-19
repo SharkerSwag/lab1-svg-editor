@@ -37,6 +37,13 @@ test('supports escaped quotes in text', () => {
   ]);
 });
 
+test('preserves UNC and extended Windows paths without collapsing literal backslashes', () => {
+  const network = '\\\\server\\shared folder\\drawing.svg';
+  const extended = '\\\\?\\C:\\My Diagrams\\drawing.svg';
+  assert.deepEqual(parser.parse(`read "${network}"`), ['read', network]);
+  assert.deepEqual(parser.parse(`save "${extended}"`), ['save', extended]);
+});
+
 test('rejects an unterminated quote and accepts the next independent line', () => {
   assert.throws(() => parser.parse('set t1 text "broken'), /unterminated double quote/u);
   assert.deepEqual(parser.parse('help'), ['help']);

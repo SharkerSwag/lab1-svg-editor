@@ -186,3 +186,47 @@ test('actual CLI reads without init, emits warnings and saves back to the read p
   const loaded = new SvgReader().read(readFileSync(file, 'utf8'));
   assert.equal(loaded.document.shape('t').text, '开始');
 });
+
+test('reader rejects invalid numeric XML references in text, attributes and ignored metadata', () => {
+  const reader = new SvgReader();
+  for (const reference of ['&#0;', '&#x1;', '&#xD800;', '&#xFFFE;', '&#x110000;', '&#4294967361;']) {
+    assert.throws(() => reader.read(`<svg><text id="t">${reference}</text></svg>`), /XML|character reference/u);
+    assert.throws(() => reader.read(`<svg><g id="g" fill="${reference}"/></svg>`), /XML|character reference/u);
+    assert.throws(() => reader.read(`<svg><title>${reference}</title></svg>`), /XML|character reference/u);
+  }
+});
+
+test('literal reference spelling in CDATA, comments and instructions remains valid text', () => {
+  const reader = new SvgReader();
+  const loaded = reader.read('<?note &#0;?> <svg><!-- &#0; --><text id="t"><![CDATA[&#0; &#xD800;]]></text></svg>');
+  assert.equal(loaded.document.shape('t').text, '&#0; &#xD800;');
+  const characters = reader.read('<svg><text id="t">&#x1F600;&#13;&#10;&#9;&amp;#0;</text></svg>');
+  assert.equal(characters.document.shape('t').text, '😀\r\n\t&#0;');
+});
+
+test('reader rejects malformed active references and unescaped ampersands', () => {
+  const reader = new SvgReader();
+  for (const invalid of ['&#-4294967231;', '&#+4294967361;', '&#;', '&#x;', '&#65', '&#x 41;', '&AMP;', 'A & B']) {
+    assert.throws(() => reader.read(`<svg><text id="t">${invalid}</text></svg>`));
+    assert.throws(() => reader.read(`<svg><g id="g" fill="${invalid}"/></svg>`));
+  }
+  const literal = reader.read('<svg><text id="t"><![CDATA[&#-1; A & B]]>&amp;#-1;</text></svg>');
+  assert.equal(literal.document.shape('t').text, '&#-1; A & B&#-1;');
+});
+
+test('a rejected character-reference import preserves the previous document and redo stack', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'svg-read-invalid-reference-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const invalid = join(directory, 'invalid-reference.svg');
+  writeFileSync(invalid, '<svg><text id="t">&#0;</text></svg>');
+  const session = new EditorSession(new FileDocumentStorage());
+  new InitCommand(session).execute([]);
+  new CreateCommand(session).execute(['g', 'keep']);
+  session.undo();
+  const previous = session.document;
+  assert.throws(() => session.read(invalid), /cannot read file/u);
+  assert.equal(session.document, previous);
+  assert.equal(session.associatedPath, undefined);
+  session.redo();
+  assert.equal(session.document.has('keep'), true);
+});

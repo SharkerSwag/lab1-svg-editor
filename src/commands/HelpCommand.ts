@@ -36,6 +36,7 @@ export class HelpCommand implements Command {
       '  front <id>',
       '  back <id>',
       '  read <file.svg>',
+      'Preview: save drawing.svg, then open drawing.svg in a browser.',
       'Send EOF to exit (Ctrl+Z then Enter on Windows).',
     ].join('\n');
   }

@@ -37,7 +37,8 @@ export class EditorSession implements CommandContext {
     if (target === undefined) { throw new Error("no file path. use 'save <file.svg>' first"); }
     if (this.storage === undefined) { throw new Error('document storage is not configured'); }
     this.storage.save(document, target);
-    this.filePath = target;
+    // Explicit exports must not replace the path established by read.
+    this.filePath ??= target;
     this.history.block();
     return target;
   }

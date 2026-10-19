@@ -14,7 +14,8 @@ export class CommandParser {
       const character = line[index]!;
       const next = line[index + 1];
 
-      if (quoted && character === '\\' && (next === '"' || next === '\\')) {
+      // Backslashes are literal (including UNC prefixes); only \" escapes a quote.
+      if (quoted && character === '\\' && next === '"') {
         current += next;
         index += 1;
         continue;

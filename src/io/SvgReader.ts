@@ -5,7 +5,7 @@ import { Shape } from '../model/Shape.js';
 import { ShapeFactory } from '../model/ShapeFactory.js';
 import { SvgDocument } from '../model/SvgDocument.js';
 import { Translation } from './Translation.js';
-import { XmlEscaper } from './XmlEscaper.js';
+import { XmlValidator } from './XmlValidator.js';
 
 export class SvgReader {
   private readonly svgNamespace = 'http://www.w3.org/2000/svg';
@@ -14,12 +14,14 @@ export class SvgReader {
   constructor(private readonly factory = new ShapeFactory()) {}
 
   read(xml: string): LoadedDocument {
-    new XmlEscaper().validate(xml);
+    const validator = new XmlValidator();
+    validator.source(xml);
     const parsed = new DOMParser({
       onError: (_level, message) => { throw new Error(message); },
       normalizeLineEndings: (source) => source.replace(/\r\n?/gu, '\n'),
     })
       .parseFromString(xml, 'application/xml');
+    validator.tree(parsed);
     const root = parsed.documentElement;
     if (parsed.doctype !== null) { throw new Error('DTD is not supported'); }
     if (root === null || root.localName !== 'svg') { throw new Error('expected an SVG root'); }
