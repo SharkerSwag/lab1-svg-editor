@@ -14,7 +14,7 @@ export class EditorSession implements CommandContext, DocumentView {
   constructor(private readonly storage?: DocumentStorage) {}
 
   get associatedPath(): string | undefined { return this.filePath; }
-  get currentDocument(): SvgDocument | undefined { return this.current; }
+  get currentDocument(): SvgDocument | undefined { return this.current?.clone(); }
   get hasUnsavedChanges(): boolean {
     return this.current !== undefined && (this.savedSnapshot === undefined || !this.current.equals(this.savedSnapshot));
   }

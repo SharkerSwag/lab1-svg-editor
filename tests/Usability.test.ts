@@ -55,6 +55,11 @@ test('unsaved state follows edits, exact undo to the saved snapshot, redo, faile
   new InitCommand(session).execute([]);
   assert.equal(session.hasUnsavedChanges, true);
   new CreateCommand(session).execute(['rect', 'r', '1', '2', '3', '4']);
+  const presented = session.currentDocument!;
+  presented.resize(1, 1);
+  presented.remove('r');
+  assert.equal(session.document.width, 800, 'presentation receives a detached view');
+  assert.equal(session.document.has('r'), true);
   session.save(file);
   assert.equal(session.hasUnsavedChanges, false);
   new MoveCommand(session).execute(['r', '10', '0']);

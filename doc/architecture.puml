@@ -9,11 +9,11 @@ skinparam componentBackgroundColor #EEF4FA
 skinparam componentBorderColor #526170
 
 component "main\n对象组合与依赖注入" as Main
-component "cli\nREPL / 参数解析 / 输出" as CLI
+component "cli\nREPL / 启动参数 / 键盘 / 输出" as CLI
 component "application\n命令调度 / 文档会话" as App
 component "commands\nCommand / History / SnapshotEdit" as Commands
-component "model\nShape / Group / SvgDocument\nShapeFactory / DocumentStorage 接口" as Model
-component "io\nXML 解析 / SVG 序列化\nFileDocumentStorage 实现" as IO
+component "model\nShape / Group / SvgDocument\nShapeFactory\nDocumentStorage / DocumentView 接口" as Model
+component "io\nXML / SVG / 文件读写\n只读实时预览 / 浏览器启动" as IO
 
 Main --> CLI
 Main --> App

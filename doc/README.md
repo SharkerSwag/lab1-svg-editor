@@ -2,7 +2,7 @@
 
 仓库地址：https://github.com/SharkerSwag/lab1-svg-editor
 
-状态：2026-10-19 Phase 1 功能已实现，正在二次复核与试用。本轮 main 修复了独立复核发现的问题，已有 final 暂保留为旧版对照，尚未重新确认正式交付。后续 box 插件不在当前范围。课程平台上的 README 上传及状态核对需由本人执行。
+状态：2026-10-21 Phase 1 功能及实用性改进已实现，95 项测试通过，当前仍保留试用与正式交付的区分。main 包含实时预览与启动改进，已有 final 暂保留为旧版对照。后续 box 插件不在当前范围。课程平台上的 README 上传及状态核对需由本人执行。
 
 ## 架构方案
 
@@ -10,11 +10,11 @@
 
 | 模块 | 职责 | 当前进度 |
 | --- | --- | --- |
-| `src/cli/` | REPL、双引号参数解析、提示符和统一错误输出 | 已实现 |
+| `src/cli/` | REPL、启动参数、双引号解析、提示符、键盘与退出提醒 | 已实现 |
 | `src/application/` | 命令注册与调度、当前文档、历史与 IO 协调 | EditorApplication / CommandRegistry / EditorSession |
 | `src/commands/` | 对象化命令、可撤销编辑和历史管理 | 十九个 CLI 命令、全部编辑对象与 History 已实现 |
 | `src/model/` | 图形类层次、分组、画布、id 与树结构不变量 | 六种图形、工厂、文档、不可变几何与属性变换已实现 |
-| `src/io/` | SVG 解析、序列化及文件读写 | XML 解析、序列化、保存与读取均已实现 |
+| `src/io/` | SVG/命令文件读写、只读实时预览、浏览器启动 | 文件端口和展示适配器均已实现 |
 | `src/main.ts` | 组合入口，构造对象并注入依赖 | 已实现 |
 | `tests/` | 自动测试，包括边界与脚本回放 | 当前覆盖输入、模型、创建、历史和示例回放 |
 
@@ -38,8 +38,9 @@
 - `application → commands/model`：调度命令并协调当前文档、历史与持久化端口，不导入 io 具体实现。
 - `commands → model`：编辑行为操作领域对象，不导入 CLI 或文件系统。
 - 应用层 `EditorSession` 实现命令层定义的 `CommandContext` 接口；命令通过该接口访问会话能力，不反向导入 application 实现，避免循环依赖。
-- `io → model`：在 SVG 和领域模型之间转换，不控制历史。
+- `io → model`：在 SVG 和领域模型之间转换，通过 DocumentView 只读获取会话状态，不控制历史或调用编辑命令。LivePreview 只提供页面、快照与 SSE 推送。
 - `model/DocumentStorage` 定义持久化端口，io 实现、application 注入使用，commands 不导入文件 IO 实现。
+- `model/DocumentView` 定义只读展示端口，由 EditorSession 实现；main 将其注入预览。cli 用 main 注入的回调请求刷新，不导入 io，application 也不依赖 HTTP 或浏览器。
 - `model` 不依赖以上模块，不导入终端与文件 IO。
 - `main.ts` 是组合入口，允许导入各模块来注入对象，不承载图形业务逻辑。
 - 测试可以依赖被测模块，不被产品代码反向导入。
@@ -50,7 +51,7 @@
 
 | 变化点 | 当前决策 |
 | --- | --- |
-| 新增 GUI 或 agent 输入通道 | CLI 与应用层分离，复用命令和图形模型 |
+| 新增 GUI 或 agent 输入通道 | 已增加只读浏览器预览适配器；编辑仍复用现有命令，不复制一套浏览器编辑逻辑 |
 | 新增图形类型及后续 `box` 插件 | 已有统一 Shape 接口和集中工厂；不提前实现动态插件加载 |
 | 新增编辑命令 | 用命令对象注册到单一分发入口，避免 REPL 膨胀 |
 | 读写格式、外部 SVG 兼容范围 | 独立 `io` 模块，先定义可支持范围，再做往返测试 |
@@ -65,6 +66,10 @@
 SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本图形、嵌套、公共样式、数字/px 长度、文字与 CDATA。title/desc/metadata 不作为图形；保留 font-size/font-family/font-weight/font-style/text-anchor/xml:space 作为导入显示属性，不扩展 set 白名单。根尺寸缺失时优先采用 viewBox，否则默认 800×600；存在 viewBox 时要求为 0 0 width height。支持嵌套 translate 并展平至几何坐标；其他 transform、CSS style/class、未支持元素/属性、非 UTF-8 和 DTD 明确拒绝，不静默丢弃。未知 data-kind 警告后降级普通类型，不恢复 box 便利属性。显式 id 先全量预留再补缺失 id，避免与后面元素碰撞。
 
 默认保存路径：read 绑定读入路径，后续显式 save 到其他文件不改变该路径，确保无参数 save 按题目写回读入文件。init 后首次成功 save 建立默认路径；init 清除绑定，后续 read 重新绑定。带引号参数中的反斜杠保持字面值，只将 `\"` 用作文字内双引号转义，因此 Windows UNC 前缀不会被折叠。
+
+实用性扩展的边界：npm run cli 保持原始无文档会话和十九条命令。npm start 通过启动参数打开示例工作副本并启动只读实时预览；--file 打开原文件，--copy 打开无默认路径的副本，--script 回放后退出且以非零退出码报告错误。预览读取内存快照并通过 SSE 更新，不调用 save，因此不产生历史屏障。浏览器只处理 DOM 与图片展示，图形变换和类型分派继续由 TypeScript 领域对象负责。
+
+未保存状态：保存/读取后保留一个文档内容快照，按图形多态几何、样式、文字、层级和顺序比较，而非简单记录“执行过编辑”。undo 回到已保存内容时恢复已保存状态；任意成功 save 都表示当前快照已有文件副本，但不改变上述默认路径规则。此状态额外占用一份文档，仍限于 Lab 小图规模。Ctrl+C 首次提示可继续保存，再次确认放弃；EOF 直接结束，不宣称自动恢复或崩溃保护。
 
 ## 过程记录
 
@@ -154,6 +159,15 @@ SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本
 - 当前共 81 项测试通过；Edge 实际加载指南生成的 SVG，蓝色矩形、橙色圆、绿色椭圆、中文与横线显示正常，截图和原 SVG 已留存。继续保留旧 final，不因本轮通过自动改写标签。
 - 源码提交 64a0513 再次通过独立干净目录的 npm ci、类型检查、81 项测试、导出与完整示例验证；新导出与已有浏览器预览源文件哈希一致。此后只记录验收结果，不修改已验证的运行代码与测试。
 
+### 2026-10-21：从功能验收到实际工具
+
+- 用户指出仍欠易用性。将这轮范围集中为终端驱动的实时预览、一键示例启动、文件/副本/脚本参数、保存状态、键盘操作和退出提醒，保留作业 CLI 主体与十九条命令。
+- 预览必须避开 save 的历史屏障，因此采用返回独立文档副本的 DocumentView + SvgSerializer + SSE，逐次发布内存内容，测试确认预览后仍可 undo/redo，展示方也不能改写会话文档。
+- 起初尝试浏览器直接下载副本，实际无头 Edge 下载未能完成，没有将请求发出当作下载成功。删除该功能，采用复制 CLI 保存命令；正式保存继续经过既有原子文件写入和历史规则。
+- 真实终端检查发现宿主 TERM=dumb 会使 Node 禁用历史编辑和补全。通过本机 Node 实现核实，简易终端改为准确提示；支持 VT 的终端实测 Tab 补全、↑ 历史、未保存 Ctrl+C 提醒，以及保存后退出。另有实际 readline 键盘事件回归测试。
+- 新增 14 项回归，共 95 项测试通过，原 81 项继续通过；没有通过改写原断言来放宽命令或历史要求。
+- 真实 Edge 检查了首屏/中文/示例换行、缩放与网格、实际 CLI 编辑/undo/redo、保存后与撤销后的状态、剪贴板按钮、刷新重连、390px 窄窗口与退出断连；浏览器无 JavaScript 或 CSP 错误。截图保存在 doc/live-preview.png。
+
 ## 一致性自查
 
 1. **模块划分**：cli/application/commands/model/io 均已创建，与方案一致；新增的 ShapeInput 适配器、DocumentStorage 端口、SnapshotEdit 和 StructureEditor 分别落在既定职责内。快照策略与依赖收紧已在过程记录中修订。
@@ -161,7 +175,7 @@ SVG 导入范围：UTF-8 XML、SVG 命名空间或无命名空间、六种基本
 
 ## 质量保证手段
 
-当前 81 项自动测试覆盖输入解析、模型不变量、编辑及精确 undo/redo、失败原子性、历史屏障、补 id 与转义、SVG 往返、完整 CLI 示例、架构规则、保存路径、UNC、非法 XML 引用与编码声明，以及 1,200 步混合操作和中文使用指南回放。测试数本身不代表代码已无缺陷。命令为 `npm run typecheck` 和 `npm test`，测试先构建再运行；`npm run demo:full` 可回放题目会话，`npm run demo:svg` 生成可直接浏览的文件。本人可按 [动手验收](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/%E5%8A%A8%E6%89%8B%E9%AA%8C%E6%94%B6.md) 操作并理解架构。
+当前 95 项自动测试覆盖输入解析、模型不变量、精确 undo/redo、失败原子性、历史屏障、SVG 往返、CLI 示例、架构规则、1,200 步混合操作，以及实时预览 HTTP/SSE、深层内容比较、未保存状态、启动参数、脚本退出码和实际 readline 键盘事件。测试数本身不代表代码已无缺陷。命令为 `npm run typecheck` 和 `npm test`；npm run demo:full 回放题目会话。本人可按 [动手验收](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/%E5%8A%A8%E6%89%8B%E9%AA%8C%E6%94%B6.md) 操作并理解架构。
 
 浏览器实际加载程序导出的 SVG，检查方框、中文、连线和节点位移，截图随文档提交。PlantUML 图也已渲染并检查。详细命令、环境和干净检出结果见 [verification.md](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/verification.md)，逐项状态见 [验收清单](https://github.com/SharkerSwag/lab1-svg-editor/blob/main/doc/%E9%AA%8C%E6%94%B6%E6%B8%85%E5%8D%95.md)。
 
