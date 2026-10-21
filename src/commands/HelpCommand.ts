@@ -37,6 +37,8 @@ export class HelpCommand implements Command {
       '  back <id>',
       '  read <file.svg>',
       'Preview: save drawing.svg, then open drawing.svg in a browser.',
+      '实时看图：普通终端运行 npm start，或 npm run cli -- --preview。',
+      '快捷键：↑/↓ 历史、Tab 补全命令；退出前请 save。',
       'Send EOF to exit (Ctrl+Z then Enter on Windows).',
     ].join('\n');
   }

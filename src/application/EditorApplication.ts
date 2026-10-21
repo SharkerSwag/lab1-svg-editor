@@ -10,4 +10,6 @@ export class EditorApplication {
     }
     return this.registry.execute(name, parameters);
   }
+
+  complete(line: string): string[] { return this.registry.complete(line); }
 }

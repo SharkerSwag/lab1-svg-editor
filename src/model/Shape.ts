@@ -55,6 +55,17 @@ export abstract class Shape {
     return this === target || this.children.some((child) => child.contains(target));
   }
 
+  equals(other: Shape): boolean {
+    const children = this.children;
+    const others = other.children;
+    return this.tag === other.tag && this.id === other.id && this.text === other.text
+      && this.sameEntries(this.geometry, other.geometry)
+      && this.sameEntries(this.styles, other.styles)
+      && this.sameEntries(this.presentation, other.presentation)
+      && children.length === others.length
+      && children.every((child, index) => child.equals(others[index]!));
+  }
+
   moved(dx: number, dy: number): Shape {
     Numbers.finite(dx, 'dx');
     Numbers.finite(dy, 'dy');
@@ -91,4 +102,8 @@ export abstract class Shape {
 
   protected abstract moveGeometry(dx: number, dy: number): Shape;
   protected abstract scaleGeometry(factor: number): Shape;
+
+  private sameEntries<T>(left: ReadonlyMap<string, T>, right: ReadonlyMap<string, T>): boolean {
+    return left.size === right.size && [...left].every(([key, value]) => right.has(key) && right.get(key) === value);
+  }
 }

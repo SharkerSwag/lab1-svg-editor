@@ -96,6 +96,12 @@ export class SvgDocument {
     return document;
   }
 
+  equals(other: SvgDocument): boolean {
+    return this.width === other.width && this.height === other.height
+      && this.roots.length === other.roots.length
+      && this.roots.every((shape, index) => shape.equals(other.roots[index]!));
+  }
+
   restore(snapshot: SvgDocument): void {
     const source = snapshot.clone();
     this.widthValue = source.width;

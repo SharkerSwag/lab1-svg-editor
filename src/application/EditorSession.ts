@@ -3,15 +3,21 @@ import { History } from '../commands/History.js';
 import type { DocumentStorage } from '../model/DocumentStorage.js';
 import type { UndoableEdit } from '../commands/UndoableEdit.js';
 import type { SvgDocument } from '../model/SvgDocument.js';
+import type { DocumentView } from '../model/DocumentView.js';
 
-export class EditorSession implements CommandContext {
+export class EditorSession implements CommandContext, DocumentView {
   private current: SvgDocument | undefined;
   private readonly history = new History();
   private filePath: string | undefined;
+  private savedSnapshot: SvgDocument | undefined;
 
   constructor(private readonly storage?: DocumentStorage) {}
 
   get associatedPath(): string | undefined { return this.filePath; }
+  get currentDocument(): SvgDocument | undefined { return this.current; }
+  get hasUnsavedChanges(): boolean {
+    return this.current !== undefined && (this.savedSnapshot === undefined || !this.current.equals(this.savedSnapshot));
+  }
 
   get document(): SvgDocument {
     if (this.current === undefined) {
@@ -23,6 +29,7 @@ export class EditorSession implements CommandContext {
   initialize(document: SvgDocument): void {
     this.current = document;
     this.filePath = undefined;
+    this.savedSnapshot = undefined;
     this.history.block();
   }
 
@@ -39,6 +46,7 @@ export class EditorSession implements CommandContext {
     this.storage.save(document, target);
     // Explicit exports must not replace the path established by read.
     this.filePath ??= target;
+    this.savedSnapshot = document.clone();
     this.history.block();
     return target;
   }
@@ -48,6 +56,7 @@ export class EditorSession implements CommandContext {
     const loaded = this.storage.read(file);
     this.current = loaded.document;
     this.filePath = file;
+    this.savedSnapshot = loaded.document.clone();
     this.history.block();
     return loaded.warnings;
   }

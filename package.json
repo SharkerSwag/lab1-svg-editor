@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "start": "tsx src/main.ts --preview --copy examples/welcome.svg",
     "cli": "tsx src/main.ts",
     "demo": "tsx src/main.ts < examples/creation.txt",
     "demo:svg": "node -e \"require('node:fs').mkdirSync('output',{recursive:true})\" && tsx src/main.ts < examples/export.txt",

@@ -20,4 +20,9 @@ export class CommandRegistry {
     }
     return command.execute(parameters);
   }
+
+  complete(line: string): string[] {
+    if (/\s/u.test(line)) { return []; }
+    return [...this.commands.keys()].filter((name) => name.startsWith(line)).sort();
+  }
 }
