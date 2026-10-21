@@ -55,6 +55,10 @@ PlantUML 组件图由 doc/architecture.puml 经 PlantUML 1.2026.9（MIT 版，�
 - 浏览器下载尝试没有完成，未纳入最终功能。当前保存统一通过 CLI，页面只复制保存命令，避免出现第二套保存状态或历史规则。
 - 当前范围只在 Windows/Edge 做过 GUI 检查；未宣称其他桌面环境的浏览器启动已实测。macOS/Linux 启动器失败会保留可手动访问的预览地址。
 
+### 本轮干净检出结果
+
+源码与启动文件提交 d8f31785658133843cc8a226422a83a2b83a6253 通过 git clone --no-hardlinks --single-branch --no-tags 导入独立临时目录 lab1-tool-check-df8c1359851a4c47baa81a11b593a071，没有带入工作目录的 node_modules/dist/output。npm ci、npm run typecheck、npm test、npm run demo:svg、npm run demo:full 全部退出码为 0，95/95 测试通过。完整会话仅有两条题目预期错误；新 flowchart.svg 与已检查的 browser-preview.svg 哈希一致。Windows 启动文件在检出后确认为 CRLF。命令日志已留在该临时目录，此后只记录验证结果，不修改已验收的源码和测试。
+
 ## 限制
 
 - 只保证 doc/README.md 明确列出的 SVG 子集，不支持完整 SVG 标准或 CSS 渲染。
