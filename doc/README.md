@@ -4,7 +4,7 @@
 
 提交版本：[`final`](https://github.com/SharkerSwag/lab1-svg-editor/tree/final)　整理日期：2026-10-24
 
-本实验与 Codex 协作完成，用 TypeScript 编写了一个 SVG 命令行编辑器。支持题目要求的十九条命令和 rect、circle、ellipse、line、text、g 六种图形。另加了只读浏览器预览，方便查看命令执行后的图片；图形编辑仍在 CLI 中完成。box 和动态插件属于后续阶段，本次未实现。
+本实验按照 Lab1 Phase 1 要求，用 TypeScript 实现了 SVG 命令行编辑器，并使用 Codex 协作开发。已实现本阶段要求的全部十九条命令，以及 rect、circle、ellipse、line、text、g 六种图形。另加了只读浏览器预览，方便查看编辑结果。题目第 3 节和第 4.4 节明确将 box 与插件化列为后续阶段内容，不属于本次提交范围。
 
 ## 运行方法
 
@@ -135,7 +135,7 @@ npm run demo:full
 
 代码已在独立干净检出目录重新安装、构建和测试。Windows 启动文件实际执行过启动、编辑、保存和退出；Edge 检查过图片、中文、缩放、状态变化、复制命令、重连和窄窗口显示。
 
-实现只针对本阶段的 SVG 子集，未做大型图形性能、并发文件修改和其他桌面平台的 GUI 验证。相关记录和示例在仓库中：
+功能按本阶段的六种图形和十九条命令验收，SVG 导入约定见前文。性能与界面检查使用实验规模的小图及 Windows/Edge 环境，其他桌面平台尚未实测。相关记录和示例在仓库中：
 
 - [测试与运行记录](https://github.com/SharkerSwag/lab1-svg-editor/blob/final/doc/verification.md)
 - [动手验收](https://github.com/SharkerSwag/lab1-svg-editor/blob/final/doc/%E5%8A%A8%E6%89%8B%E9%AA%8C%E6%94%B6.md)

@@ -61,7 +61,7 @@ npm run demo:full
 
 `npm test` 包含 95 项测试。`demo:svg` 在 output/ 下生成修改前后的流程图；`demo:full` 回放题目会话，其中祖孙冲突和保存后 undo 是两条预期错误。
 
-本阶段支持 rect、circle、ellipse、line、text 和 g。box 与插件加载留到后续阶段，外部 SVG 的具体支持范围写在实验报告里。
+已实现本阶段要求的十九条命令，以及 rect、circle、ellipse、line、text 和 g 六种图形。题目第 3 节和第 4.4 节明确将 box 与插件化列为后续阶段内容。外部 SVG 的导入约定写在实验报告里。
 
 ## 文档
 
